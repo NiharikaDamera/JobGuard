@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Job | JobGuard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <a href="index.html" class="logo">JobGuard<span>.</span></a>
+
+        <nav class="navbar">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="#" id="logoutButton">Logout</a>
+        </nav>
+    </header>
+
+    <main class="analysis-page">
+
+        <section class="analysis-container">
+
+            <div class="section-heading">
+                <p class="tagline">JOB ANALYSIS</p>
+                <h1>Analyze a Job Opportunity</h1>
+                <p class="section-description">
+                    Enter the job details below. JobGuard will examine
+                    the description for potential warning signs.
+                </p>
+            </div>
+
+            <form id="job-analysis-form">
+
+                <div class="form-group">
+                    <label for="job-title">Job Title</label>
+                    <input
+                        type="text"
+                        id="job-title"
+                        placeholder="Example: Software Developer Intern"
+                        maxlength="200"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="company">Company Name</label>
+                    <input
+                        type="text"
+                        id="company"
+                        placeholder="Example: ABC Technologies"
+                        maxlength="200"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="job-description">Job Description</label>
+                    <textarea
+                        id="job-description"
+                        rows="12"
+                        maxlength="20000"
+                        placeholder="Paste the complete job description here..."
+                        required
+                    ></textarea>
+
+                    <p class="input-hint">
+                        Include the salary, requirements, application process
+                        and contact details if they are available.
+                    </p>
+                </div>
+
+                <p
+                    id="error-message"
+                    class="form-message"
+                    role="alert"
+                ></p>
+
+                <button
+                    type="submit"
+                    class="analyze-button"
+                    id="analyze-button"
+                >
+                    Analyze Job
+                </button>
+
+            </form>
+
+            <p class="analysis-disclaimer">
+                JobGuard provides risk indicators based on the information
+                submitted. Always verify employers independently.
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="logo">JobGuard<span>.</span></a>
+        <p>© 2026 JobGuard. Stay informed. Stay safe.</p>
+    </footer>
+
+    <script>
+
+        const API_URL = "http://127.0.0.1:8000/api/";
+        const token = localStorage.getItem("token");
+
+        const form = document.getElementById("job-analysis-form");
+        const button = document.getElementById("analyze-button");
+        const errorMessage = document.getElementById("error-message");
+
+        // Protect page from unauthenticated access
+        if (!token) {
+            window.location.replace("login.html");
+        }
+
+        // Logout
+        document.getElementById("logoutButton").addEventListener(
+            "click",
+            function(event) {
+
+                event.preventDefault();
+
+                localStorage.removeItem("token");
+                localStorage.removeItem("userName");
+                localStorage.removeItem("userEmail");
+
+                window.location.replace("index.html");
+            }
+        );
+
+        // Submit job for analysis
+        form.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            // Check authentication
+            if (!token) {
+                window.location.replace("login.html");
+                return;
+            }
+
+            // Prevent duplicate submissions
+            if (button.disabled) {
+                return;
+            }
+
+            const jobTitle = document.getElementById("job-title").value.trim();
+
+            const company = document.getElementById("company").value.trim();
+
+            const jobDescription = document.getElementById(
+                "job-description"
+            ).value.trim();
+
+            // Clear previous error messages
+            errorMessage.textContent = "";
+            errorMessage.className = "form-message";
+
+            // Validate input fields
+            if (!jobTitle || !company || !jobDescription) {
+
+                errorMessage.textContent =
+                    "Please complete all fields.";
+
+                errorMessage.classList.add("error");
+
+                return;
+            }
+
+            // Show loading state
+            button.disabled = true;
+            button.textContent = "Analyzing Job...";
+            button.style.opacity = "0.7";
+            button.style.cursor = "not-allowed";
+
+            try {
+
+                const response = await fetch(API_URL + "analyze/", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Token " + token
+                    },
+
+                    body: JSON.stringify({
+                        job_title: jobTitle,
+                        company_name: company,
+                        job_description: jobDescription
+                    })
+
+                });
+
+                // Safely read server response
+                let data = {};
+
+                try {
+
+                    data = await response.json();
+
+                } catch (error) {
+
+                    throw new Error(
+                        "The server returned an unexpected response. Please try again."
+                    );
+
+                }
+
+                // Handle authentication errors
+                if (
+                    response.status === 401 ||
+                    response.status === 403
+                ) {
+
+                    localStorage.removeItem("token");
+
+                    window.location.replace("login.html");
+
+                    return;
+                }
+
+                // Handle unsuccessful API responses
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Unable to analyze this job. Please try again."
+                    );
+
+                }
+
+                // Validate successful response
+                if (
+                    !data ||
+                    typeof data !== "object" ||
+                    !("risk_score" in data) ||
+                    !("risk_level" in data)
+                ) {
+
+                    throw new Error(
+                        "The analysis result is incomplete. Please try again."
+                    );
+
+                }
+
+                // Save analysis result
+                localStorage.setItem(
+                    "jobAnalysisResult",
+                    JSON.stringify(data)
+                );
+
+                // Navigate to result page
+                window.location.href = "result.html";
+
+            } catch (error) {
+
+                console.error("Job analysis error:", error);
+
+                // Handle network errors
+                if (error instanceof TypeError) {
+
+                    errorMessage.textContent =
+                        "Unable to connect to JobGuard's server. Please check your connection and try again.";
+
+                } else {
+
+                    errorMessage.textContent =
+                        error.message ||
+                        "Something went wrong. Please try again.";
+
+                }
+
+                errorMessage.classList.add("error");
+
+            } finally {
+
+                // Restore button state
+                button.disabled = false;
+                button.textContent = "Analyze Job";
+                button.style.opacity = "1";
+                button.style.cursor = "pointer";
+
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>

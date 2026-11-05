@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result | JobGuard</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .result-page {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .score-section {
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 54px;
+            font-weight: 800;
+            margin: 15px 0 5px;
+        }
+
+        .risk-label {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .risk-low {
+            color: #087443;
+            background: #dcfce7;
+        }
+
+        .risk-medium {
+            color: #a16207;
+            background: #fef3c7;
+        }
+
+        .risk-high {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        .risk-critical {
+            color: #7f1d1d;
+            background: #fecaca;
+        }
+
+        .score-bar {
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        .score-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 20px;
+            transition: width 0.7s ease;
+            background: #dc2626;
+        }
+
+        .result-item {
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin: 12px 0;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            background: #eef2ff;
+            color: #3730a3;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .verification-item {
+            border-left: 4px solid #94a3b8;
+        }
+
+        .verification-item.pass {
+            border-left-color: #16a34a;
+        }
+
+        .verification-item.warning {
+            border-left-color: #d97706;
+        }
+
+        .verification-item.fail {
+            border-left-color: #dc2626;
+        }
+
+        .result-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+
+        .result-actions a {
+            text-decoration: none;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .primary-action {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .secondary-action {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .disclaimer {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        .empty-message {
+            color: #64748b;
+            text-align: center;
+            padding: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .result-page {
+                margin: 15px auto;
+                padding: 12px;
+            }
+
+            .result-card {
+                padding: 18px;
+            }
+
+            .score-number {
+                font-size: 42px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="logo">JobGuard</div>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="analyze.html">Analyze Job</a>
+            <a href="index.html" onclick="logout()">Logout</a>
+        </nav>
+    </header>
+
+    <main class="result-page">
+
+        <div class="result-header">
+            <h1>Job Analysis Result</h1>
+            <p>Review the risk indicators found in this job posting.</p>
+        </div>
+
+        <div id="result-content">
+            <p class="empty-message">Loading analysis result...</p>
+        </div>
+
+    </main>
+
+    <script>
+        function logout() {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userEmail");
+        }
+
+        function getRiskClass(level) {
+            const normalized = String(level || "").toLowerCase();
+
+            if (normalized.includes("critical")) return "risk-critical";
+            if (normalized.includes("high")) return "risk-high";
+            if (normalized.includes("medium")) return "risk-medium";
+
+            return "risk-low";
+        }
+
+        function getVerificationClass(status) {
+    const normalized = String(status || "").toLowerCase();
+
+    // Check negative statuses first
+    if (
+        normalized.includes("not verified") ||
+        normalized.includes("unverified") ||
+        normalized.includes("fail") ||
+        normalized.includes("suspicious")
+    ) {
+        return "fail";
+    }
+
+    // Check positive statuses
+    if (
+        normalized.includes("pass") ||
+        normalized.includes("verified") ||
+        normalized.includes("clear")
+    ) {
+        return "pass";
+    }
+
+    return "warning";
+}
+        function createTagList(items) {
+            if (!Array.isArray(items) || items.length === 0) {
+                return '<p class="empty-message">No insights available.</p>';
+            }
+
+            return `
+                <div class="tag-container">
+                    ${items.map(item => `
+                        <span class="tag">${escapeHTML(item)}</span>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? "").replace(/[&<>"']/g, character => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            })[character]);
+        }
+
+            function displayResult(data) {
+            if (!data || typeof data !== "object" || Array.isArray(data)) {
+        document.getElementById("result-content").innerHTML =
+            '<p class="empty-message">Invalid analysis data. Please analyze the job again.</p>';
+        return;
+    }
+            if (
+        data.risk_score === undefined ||
+        data.risk_level === undefined
+    ) {
+        document.getElementById("result-content").innerHTML =
+            '<p class="empty-message">Analysis result is incomplete. Please analyze the job again.</p>';
+        return;
+    }
+            const container = document.getElementById("result-content");
+
+            const score = Math.max(
+                0,
+                Math.min(100, Number(data.risk_score) || 0)
+            );
+
+            const riskLevel = data.risk_level || "Unknown";
+            const riskClass = getRiskClass(riskLevel);
+            const factors = Array.isArray(data.risk_factors)
+                ? data.risk_factors
+                : [];
+
+            const nlp = data.nlp_insights || {};
+            const verification = data.company_verification || {};
+            const checks = Array.isArray(verification.checks)
+                ? verification.checks
+                : [];
+
+            container.innerHTML = `
+                <section class="result-card">
+                    <div class="score-section">
+                        <h2>Risk Assessment</h2>
+
+                        <div class="score-number">
+                            ${score}<span style="font-size:22px;">/100</span>
+                        </div>
+
+                        <span class="risk-label ${riskClass}">
+                            ${escapeHTML(riskLevel)} Risk
+                        </span>
+
+                        <div class="score-bar">
+                            <div
+                                class="score-fill"
+                                id="score-fill"
+                                style="width: ${score}%;">
+                            </div>
+                        </div>
+
+                        <p>
+                            Job Title:
+                            <strong>${escapeHTML(data.job_title || "Not provided")}</strong>
+                        </p>
+
+                        <p>
+                            Company:
+                            <strong>${escapeHTML(data.company_name || "Not provided")}</strong>
+                        </p>
+                    </div>
+                </section>
+
+                <section class="result-card">
+                    <h2>Risk Factors</h2>
+
+                    ${
+                        factors.length
+                        ? factors.map(factor => `
+                            <div class="result-item">
+                                <strong>
+                                    ${escapeHTML(
+                                        typeof factor === "string"
+                                        ? factor
+                                        : factor.title || factor.name || "Risk indicator"
+                                    )}
+                                </strong>
+
+                                ${
+                                    typeof factor === "object" && factor.description
+                                    ? `<p>${escapeHTML(factor.description)}</p>`
+                                    : ""
+                                }
+                            </div>
+                        `).join("")
+                        : '<p class="empty-message">No specific risk factors were detected.</p>'
+                    }
+                </section>
+
+                <section class="result-card">
+                    <h2>NLP Insights</h2>
+
+                    <h3>Possible Organizations</h3>
+                    ${createTagList(nlp.organizations)}
+
+                    <h3>Important Nouns</h3>
+                    ${createTagList(nlp.nouns)}
+
+                    <h3>Action Words</h3>
+                    ${createTagList(nlp.verbs)}
+
+                    <p class="disclaimer">
+                        NLP identifies words and possible organization names
+                        in the job description. These findings do not prove
+                        whether a job is genuine or fraudulent.
+                    </p>
+                </section>
+
+                <section class="result-card">
+                    <h2>Company Verification</h2>
+
+                    <h3>
+                        ${escapeHTML(
+                            verification.verification_status || "Verification information"
+                        )}
+                    </h3>
+
+                    <p>
+                        ${escapeHTML(
+                            verification.message ||
+                            "Review the checks below before proceeding."
+                        )}
+                    </p>
+
+                    ${
+                        checks.length
+                        ? checks.map(check => {
+                            const status = check.status || "Not checked";
+
+                            return `
+                                <div class="result-item verification-item ${getVerificationClass(status)}">
+                                    <strong>
+                                       ${escapeHTML(check.check || check.label || check.name || "Verification check")}
+                                    </strong>
+                                    <p>Status: ${escapeHTML(status)}</p>
+                                        ${
+        check.message
+        ? `<p>${escapeHTML(check.message)}</p>`
+        : ""
+    }
+
+    ${
+        Array.isArray(check.websites) && check.websites.length
+        ? check.websites.map(website => `
+            <p>
+                Website:
+                <a href="${escapeHTML(website.url)}"
+                target="_blank"
+                rel="noopener noreferrer">
+                    ${escapeHTML(website.domain)}
+                </a>
+            </p>
+        `).join("")
+        : ""
+    }
+                                </div>
+                            `;
+                        }).join("")
+                        : '<p class="empty-message">No company verification checks were returned.</p>'
+                    }
+
+                    <p class="disclaimer">
+                        These are preliminary checks, not an official verification
+                        of the company's identity or legitimacy.
+                    </p>
+                </section>
+
+                <div class="result-actions">
+                    <a href="analyze.html" class="primary-action">
+                        Analyze Another Job
+                    </a>
+
+                    <a href="dashboard.html" class="secondary-action">
+                        View Dashboard
+                    </a>
+                </div>
+            `;
+        }
+
+        const savedResult = localStorage.getItem("jobAnalysisResult");
+
+        if (savedResult) {
+            try {
+                displayResult(JSON.parse(savedResult));
+            } catch (error) {
+                document.getElementById("result-content").innerHTML =
+                    '<p class="empty-message">Unable to read the saved analysis. Please analyze the job again.</p>';
+            }
+        } else {
+            document.getElementById("result-content").innerHTML =
+                '<p class="empty-message">No analysis result found. Please analyze a job first.</p>';
+        }
+    </script>
+
+</body>
+</html>

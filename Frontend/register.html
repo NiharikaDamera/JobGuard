@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | JobGuard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <a href="index.html" class="logo">JobGuard<span>.</span></a>
+
+        <nav class="navbar">
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main class="auth-page">
+        <section class="auth-card">
+
+            <div class="auth-heading">
+                <p class="tagline">JOIN JOBGUARD</p>
+                <h1>Create Your Account</h1>
+                <p>Start checking job opportunities with confidence.</p>
+            </div>
+
+            <form id="register-form">
+
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Enter your full name"
+                        autocomplete="name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Enter your email"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        placeholder="Re-enter your password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+                </div>
+
+                <p id="register-message" class="form-message" role="alert"></p>
+
+                <button type="submit" id="register-button" class="auth-button">
+                    Create Account
+                </button>
+
+            </form>
+
+            <p class="auth-switch">
+                Already have an account?
+                <a href="login.html">Login</a>
+            </p>
+
+            <a href="index.html" class="back-link">← Back to Home</a>
+
+        </section>
+    </main>
+
+    <script>
+        const registerForm = document.getElementById("register-form");
+
+        registerForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            const message = document.getElementById("register-message");
+            const button = document.getElementById("register-button");
+
+            message.textContent = "";
+            message.className = "form-message";
+
+            if (password !== confirmPassword) {
+                message.textContent = "Passwords do not match.";
+                message.classList.add("error");
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Creating Account...";
+
+            try {
+                const response = await fetch(
+                    "http://127.0.0.1:8000/api/register/",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            email: email,
+                            password: password
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    message.textContent = "Account created successfully! Redirecting to login...";
+                    message.classList.add("success");
+
+                    registerForm.reset();
+
+                    setTimeout(function() {
+                        window.location.href = "login.html";
+                    }, 1200);
+
+                } else {
+                    message.textContent = data.error || "Registration failed. Please try again.";
+                    message.classList.add("error");
+                }
+
+            } catch (error) {
+                message.textContent = "Could not connect to the server. Please try again.";
+                message.classList.add("error");
+                console.error(error);
+
+            } finally {
+                button.disabled = false;
+                button.textContent = "Create Account";
+            }
+        });
+    </script>
+
+</body>
+</html>
