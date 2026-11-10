@@ -662,3 +662,126 @@ footer {
         padding: 8px 12px;
     }
 }
+
+
+/* ==============================
+   HOW JOBGUARD WORKS SECTION
+============================== */
+
+.how-it-works {
+    padding: 75px 7%;
+    background-color: #f8fafc;
+    text-align: center;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.step {
+    background-color: #ffffff;
+    padding: 35px 28px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.09);
+}
+
+.step span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #e8efff;
+    color: #3157c8;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.step h3 {
+    font-size: 20px;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.step p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #64748b;
+}
+
+/* HOW IT WORKS - MOBILE RESPONSIVE */
+
+@media (max-width: 768px) {
+    .steps {
+        grid-template-columns: 1fr;
+    }
+
+    .step {
+        padding: 28px 22px;
+    }
+}
+
+
+/* ==============================
+   FEATURES SECTION FIX
+============================== */
+
+.feature-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* ==============================
+   CTA SECTION FIX
+============================== */
+
+.cta {
+    padding: 75px 7%;
+    text-align: center;
+    background-color: #eef2ff;
+}
+
+.cta h2 {
+    margin-bottom: 18px;
+}
+
+.cta p {
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+/* ==============================
+   RESPONSIVE DESIGN
+============================== */
+
+@media (max-width: 768px) {
+    .feature-container {
+        grid-template-columns: 1fr;
+    }
+
+    .cta {
+        padding: 55px 6%;
+    }
+}
