@@ -24,3 +24,6 @@ media/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Local database backup
+mysql_backup.json
