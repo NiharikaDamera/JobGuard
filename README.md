@@ -108,3 +108,29 @@ The backend will be available at:
 ### 7. Run the Frontend
 
 Open `Frontend/index.html` in your web browser.
+
+
+
+## Application Screenshots
+
+### 1. Landing Page
+![JobGuard Landing Page](screenshots/01-Landing-page.png)
+
+### 2. Features
+![JobGuard Features](screenshots/02-features.png)
+
+### 3. How It Works
+![How JobGuard Works](screenshots/03-how-it-works.png)
+
+### 4. Risk Assessment
+![Risk Assessment](screenshots/04-risk-assessment.png)
+
+### 5. Risk Factors
+![Detected Risk Factors](screenshots/05-risk-factors.png)
+
+### 6. NLP Insights
+![NLP Insights](screenshots/06-nlp-insights.png)
+
+### 7. Company Verification
+![Company Verification](screenshots/07-Company-verification.png)
+
